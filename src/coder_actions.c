@@ -1,7 +1,7 @@
 
 #include "codex.h"
 
-void    request_or_grab(t_coder *coder, t_dongle *dongle)
+int    request_or_grab(t_coder *coder, t_dongle *dongle)
 {
     t_request           request;
     long                to_cooldown;
@@ -29,7 +29,7 @@ void    request_or_grab(t_coder *coder, t_dongle *dongle)
     pthread_mutex_unlock(&dongle->d_lock);
 }
 
-void    grab_dongles(t_coder *coder)
+int    grab_dongles(t_coder *coder)
 {   // avoiding deadlock
     // minor tradeoff when odd nb_coders
     int     id;
@@ -41,6 +41,7 @@ void    grab_dongles(t_coder *coder)
         print_log(coder, elapsed_time_ms(coder->sim), GRAB);
         request_or_grab(coder, coder->dongle_2);
         print_log(coder, elapsed_time_ms(coder->sim), GRAB);
+        return (0);
     }
     else 
     {
@@ -76,21 +77,29 @@ void    compile(t_coder *coder)
 
 }
 
-void    debugging(t_coder *coder)
+void    debug(t_coder *coder)
 {
     long    now;
+    long    debug_time;
 
     now = get_time_ms();
     print_log(coder, now, DEBUG);
+    //unlock and change action ???
+    debug_time = coder->sim->args->time_to_debug;
+    usleep(debug_time * 1000);
 
 }
 
-void    refactoring(t_coder *coder)
+void    refactor(t_coder *coder)
 {
     long    now;
+    long    refactor_time;
 
     now = get_time_ms();
     print_log(coder, now, REFACTOR);
+    //unlock and change action ???
+    refactor_time = coder->sim->args->time_to_refactor;
+    usleep(refactor_time * 1000);
 }
 
 
@@ -103,12 +112,13 @@ void    release_dongle(t_dongle *dongle, long timestamp)
     pthread_mutex_unlock(&dongle->d_lock);
 }
 
-void    routine_loop(t_coder *coder)
+void    *coder_routine(t_coder *coder)
 {
-    // acquire dongles + lock
-    // compile
-    // release dongles
-    // debug
-    // refactor
-
+    while (!coder->sim->stop_sim)
+    {
+        grab_dongles(coder);
+        compile(coder);
+        debug(coder);
+        refactor(coder);
+    }
 }
