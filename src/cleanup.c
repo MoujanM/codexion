@@ -1,3 +1,14 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   cleanup.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/31 13:31:41 by mmirdama          #+#    #+#             */
+/*   Updated: 2026/07/31 16:27:41 by mmirdama         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "codex.h"
 
@@ -12,6 +23,7 @@ int     clean_dongle(t_dongle *dongle)
         return (1);
     if (pthread_cond_destroy(&dongle->d_cond))
         return (1);
+    // should I free the request_heap (never malloc'd)??
     return (0);
 }
 
@@ -46,8 +58,8 @@ int     clean_all(t_dongle *dongle, t_coder *coder, t_sim *sim)
 
     while (n > 0)
     {
-        clean_dongle(sim->dongles[i]);
-        clean_coder(sime->coders[i]);
+        clean_dongle(&sim->dongles[i]);
+        clean_coder(&sim->coders[i]);
         i++;
         n--;
     }

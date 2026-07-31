@@ -1,3 +1,14 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   miniheap.c                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/31 13:38:21 by mmirdama          #+#    #+#             */
+/*   Updated: 2026/07/31 16:16:17 by mmirdama         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "codex.h"
 
@@ -5,10 +16,7 @@
 
 // if keeping this, move to utils
 // add similar child ops
-int     get_parent(int  idx)
-{
-    return ((idx - 1) / 2);
-}
+
 void    swap(t_request *x, t_request *y)
 {
     t_request   tmp;

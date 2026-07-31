@@ -1,3 +1,14 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   codex.h                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/31 13:38:39 by mmirdama          #+#    #+#             */
+/*   Updated: 2026/07/31 16:25:55 by mmirdama         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #ifndef CODEX_H
  #define CODEX_H
@@ -6,12 +17,13 @@
  #include <limits.h>
  #include <string.h>
  #include <stdlib.h>
+ #include <stdio.h>
  #include <stdbool.h>
  #include <time.h>
- 
+ #include <linux/time.h>
 
  #define MAX 100      //arbitrary for heap
-
+ 
 
 typedef enum      actions
 {
@@ -85,29 +97,50 @@ typedef struct  s_monitor
 {
     pthread_t   thread;
     t_sim       *sim;
-}
+} t_monitor;
 
 // parsing and set-up
+
 int     ft_parser(int ac, char **av, t_args *args);
 void	fill_args_struct(int *arg_arr, char *scheduler, t_args *args);
-t_sim   *create_simulation(t_args *args);
-void    init_coders(t_sim *sim);
-void    init_dongles(t_sim *sim);
+
+t_sim   *create_simulation(t_args *args, void *coder_routine);
+int     init_dongles(t_sim *sim);
+int     init_coders(t_sim *sim, void *coder_routine);
+
 
 long     get_time_ms(void);
 long     elapsed_time_ms(t_sim *sim);
 
-void    print_log(t_coder *coder, long timestamp, action act);
+void     print_log(t_coder *coder, long timestamp, action act);
 
 
 //coder actions
-void    request_or_grab(t_coder *coder, t_dongle *dongle);
-void    grab_dongles(t_coder *coder);
-void    compile(t_coder *coder);
-void    debug(t_coder *coder);
-void    refactor(t_coder *coder);
-void    release_dongle(t_dongle *dongle, long timestamp);
-void    routine_loop(t_coder *coder);
+t_request	make_request(t_coder *coder);
+int         request_or_grab(t_coder *coder, t_dongle *dongle);
+int         grab_dongles(t_coder *coder);
+void        release_dongle(t_dongle *dongle, long timestamp);
 
-//monitor thread
+void        compile(t_coder *coder);
+void        debug(t_coder *coder);
+void        refactor(t_coder *coder);
+void        *coder_routine(void *args);
 
+//simulation management
+void    print_log(t_coder *coder, long timestamp, action act);
+long    get_time_ms(void);
+long    elapsed_time_ms(t_sim *sim);
+int     fail_safe(int ret, char *msg);
+
+// mini-heap
+void    swap(t_request *x, t_request *y);
+void    bubble_up(t_heap *heap, int idx);
+void    bubble_down(t_heap *heap, int idx);
+void    insert(t_heap *heap, t_request request);
+void    pop_min(t_heap *heap);
+int     get_parent(int  idx);
+
+
+
+
+#endif

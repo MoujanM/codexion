@@ -1,5 +1,26 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/31 13:36:54 by mmirdama          #+#    #+#             */
+/*   Updated: 2026/07/31 16:16:21 by mmirdama         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "codex.h"
+
+int     fail_safe(int ret, char *msg)
+{
+    if (ret != 0)
+    {
+        fprintf(stderr, "Encountered Error: %s\n", msg);
+        exit (1);
+    }
+    return (ret);
+}
 
 long     get_time_ms(void)
 {
@@ -30,7 +51,7 @@ void    print_log(t_coder *coder, long timestamp, action act)
     pthread_mutex_unlock(&coder->sim->print_lock);
 }
 
-void    exit_destroy(t_sim sim)
+int     get_parent(int  idx)
 {
-    
+    return ((idx - 1) / 2);
 }

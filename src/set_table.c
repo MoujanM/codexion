@@ -1,11 +1,23 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   set_table.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/31 13:32:39 by mmirdama          #+#    #+#             */
+/*   Updated: 2026/07/31 16:11:17 by mmirdama         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "codex.h"
 
-void    init_dongles(t_sim *sim)
+int    init_dongles(t_sim *sim)
 {
     t_dongle    *dongles;
     int         n;
     int         i;
+    int         ret;
     
     dongles = sim->dongles;
     n = sim->args->nb_coders;
@@ -16,40 +28,44 @@ void    init_dongles(t_sim *sim)
         dongles[i].is_available = true;
         dongles[i].last_release = 0;
         pthread_mutex_init(&dongles[i].d_lock, NULL);
-        pthread_cond_init(&dongles[i].d_cond);
-        dongles[i].request_heap = NULL;     //double-check this
-        i++;
-    }
-}
-
-int    init_coders(t_sim *sim)
-{
-    t_coder     *coders;
-    t_dongle    *dongles;
-    int         n;
-    int         i;
-
-    coders = sim->coders;
-    dongles = sim->dongles;
-    n = sim->args->nb_coders;
-    i = 0;
-    while (i <= n - 1)
-    {
-        if (pthread_create(&coders[i].thread, NULL, coder_routine, coders[i]))
-            return (1);
-        coders[i].coder_id = i + 1;
-        coders[i].last_compile = 0;
-        coders[i].nb_compiles = 0;
-        coders[i].dongle_1 = &dongles[i];
-        coders[i].dongle_2 = &dongles[(i + 1) % n]     //circular access
-        pthread_mutex_init(&coders[i].lock, NULL);
-        coders[i].sim_args = sim;
+        ret = pthread_cond_init(&dongles[i].d_cond, NULL);
+        fail_safe(ret, "Mutex cond creation failed.");
+        dongles[i].request_heap.size = 0;   //struct will fill on the go
         i++;
     }
     return (0);
 }
 
-t_sim   *create_simulation(t_args *args)
+int    init_coders(t_sim *sim, void *coder_routine)
+{
+    t_coder     *coders;
+    t_dongle    *dongles;
+    int         n;
+    int         i;
+    int         ret;
+
+    coders = sim->coders;
+    dongles = sim->dongles;
+    n = sim->args->nb_coders;
+    i = 0;
+    while (i < n)
+    {
+        
+        coders[i].coder_id = i + 1;
+        coders[i].last_compile = 0;
+        coders[i].nb_compiles = 0;
+        coders[i].dongle_1 = &dongles[i];
+        coders[i].dongle_2 = &dongles[(i + 1) % n];     //circular access
+        coders[i].sim = sim;
+        fail_safe(pthread_mutex_init(&coders[i].lock, NULL), "Coder mutex failed.");
+        ret = pthread_create(&coders[i].thread, NULL, coder_routine, (void *)&coders[i]);
+        fail_safe(ret, "Thread creation failed.");
+        i++;
+    }
+    return (0);
+}
+
+t_sim   *create_simulation(t_args *args, void *coder_routine)
 {
     t_sim       *sim;
     t_coder     *coders;
@@ -62,17 +78,17 @@ t_sim   *create_simulation(t_args *args)
     sim->args = args;
 
     coders = malloc(sizeof(t_coder) * args->nb_coders);
-    if !coders
+    if (!coders)
         return (NULL);
     dongles = malloc(sizeof(t_dongle) * args->nb_coders);
     if (!dongles)
         return (NULL);
     sim->coders = coders;
     sim->dongles = dongles;
-    init_dongles(sim);
-    init_coders(sim);
-    pthread_mutex_init(&sim->print_lock, NULL);
-    pthread_mutex_init(&sim->sim_lock, NULL);
     sim->stop_sim = false;
+    fail_safe(pthread_mutex_init(&sim->print_lock, NULL), "Sim Mutex failed");
+    fail_safe(pthread_mutex_init(&sim->sim_lock, NULL), "Sim Mutex failed");
+    init_dongles(sim);
+    init_coders(sim, coder_routine);
     return (sim);
 }

@@ -1,3 +1,14 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   monitor.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/31 13:37:17 by mmirdama          #+#    #+#             */
+/*   Updated: 2026/07/31 13:37:43 by mmirdama         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "codex.h"
 
@@ -38,7 +49,7 @@ bool    coder_burnt(t_sim *sim, t_coder *coder, long timestamp)
     deadline = sim->args->time_to_burnout;
     
     return ((timestamp - coder->last_compile > deadline) ||
-    (timestamp - sim->start_time > deadline && !coder->nb_compiles))
+    (timestamp - sim->start_time > deadline && !coder->nb_compiles));
 }
 
 void    *monitor_routine(t_sim *sim)
@@ -54,7 +65,7 @@ void    *monitor_routine(t_sim *sim)
         while (i < sim->args->nb_coders)
         {
             coder = sim->coders[i];
-            pthread_mutex_lock(coder.lock);
+            pthread_mutex_lock(&coder.lock);
             now = elapsed_time_ms(sim);
             if (coder_burnt(sim, &coder, now))
             {
@@ -64,7 +75,7 @@ void    *monitor_routine(t_sim *sim)
             }
             if (sim->coders[i].nb_compiles < sim->args->nb_compiles_req)
                 all_done = 0;
-            pthread_mutex_unlock(coder.lock);
+            pthread_mutex_unlock(&coder.lock);
             i++;
         }
         if (all_done == 1)
