@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:31:41 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/07/31 16:27:41 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/03 17:30:15 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@ int     clean_dongle(t_dongle *dongle)
         return (1);
     if (pthread_cond_destroy(&dongle->d_cond))
         return (1);
-    // should I free the request_heap (never malloc'd)??
     return (0);
 }
 
@@ -45,10 +44,11 @@ int     clean_sim(t_sim *sim)
         return (1);
     free(sim->coders);
     free(sim->dongles);
+    free(sim);
     return (0);
 }
 
-int     clean_all(t_dongle *dongle, t_coder *coder, t_sim *sim)
+int     clean_all(t_sim *sim)
 {
     int     n;
     int     i;
@@ -56,12 +56,11 @@ int     clean_all(t_dongle *dongle, t_coder *coder, t_sim *sim)
     n = sim->args->nb_coders;
     i = 0;
 
-    while (n > 0)
+    while (i < n)
     {
         clean_dongle(&sim->dongles[i]);
         clean_coder(&sim->coders[i]);
         i++;
-        n--;
     }
     clean_sim(sim);
     return (0);

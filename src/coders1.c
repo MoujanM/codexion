@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:38:49 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/07/31 14:29:42 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/03 19:19:31 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,77 +18,74 @@ t_request	make_request(t_coder *coder)
 	int			burn_time;
 
 	burn_time = coder->sim->args->time_to_burnout;
-
 	request.coder_id = coder->coder_id;
-    if (strcmp(coder->sim->args->scheduler, "fifo") == 0)
-        request.priority = get_time_ms();
-    if (strcmp(coder->sim->args->scheduler, "edf") == 0)
-        request.priority = burn_time + coder->last_compile;
+	if (strcmp(coder->sim->args->scheduler, "fifo") == 0)
+		request.priority = get_time_ms();
+	else if (strcmp(coder->sim->args->scheduler, "edf") == 0)
+		request.priority = burn_time + coder->last_compile;
 	return (request);
 }
 
-int    request_or_grab(t_coder *coder, t_dongle *dongle)
+int	request_or_grab(t_coder *coder, t_dongle *dongle)
 {
-    t_request           request;
-    long                to_cooldown;
-    struct timespec     t;
+	t_request			request;
+	long				to_cooldown;
+	struct timespec		t;
 
-    request = make_request(coder);
-    pthread_mutex_lock(&dongle->d_lock);
-    insert(&dongle->request_heap, request);
-    while (!coder->sim->stop_sim &&
-        !(dongle->is_available && dongle->request_heap.request[0].coder_id == coder->coder_id))
-    {
-        to_cooldown = dongle->last_release + coder->sim->args->dongle_cooldown;
-        t.tv_sec = to_cooldown / 1000;
-        t.tv_nsec = (to_cooldown % 1000) * 1000000;
-        pthread_cond_timedwait(&dongle->d_cond, &dongle->d_lock, &t);
-    }
-    if (coder->sim->stop_sim)
-    {
-        pthread_mutex_unlock(&dongle->d_lock);
-        return (1); // orphaned heap - but cleanup on stop_sim so all good
-    }
-    pop_min(&dongle->request_heap);
-    dongle->is_available = false;
-    pthread_mutex_unlock(&dongle->d_lock);
-    return (0);
+	request = make_request(coder);
+	pthread_mutex_lock(&dongle->d_lock);
+	insert(&dongle->request_heap, request);
+	while (!coder->sim->stop_sim && !(dongle->is_available
+			&& dongle->request_heap.request[0].coder_id == coder->coder_id))
+	{
+		to_cooldown = dongle->last_release + coder->sim->args->dongle_cooldown;
+		t.tv_sec = to_cooldown / 1000;
+		t.tv_nsec = (to_cooldown % 1000) * 1000000;
+		pthread_cond_timedwait(&dongle->d_cond, &dongle->d_lock, &t);
+	}
+	if (coder->sim->stop_sim)
+	{
+		pthread_mutex_unlock(&dongle->d_lock);
+		return (1);
+	}
+	pop_min(&dongle->request_heap);
+	dongle->is_available = false;
+	pthread_mutex_unlock(&dongle->d_lock);
+	return (0);
 }
 
-int    grab_dongles(t_coder *coder)
+int	grab_dongles(t_coder *coder)
 {
-    t_dongle    *first;
-    t_dongle    *second;
-    
-    if (coder->coder_id % 2 != 0)
-    {
-        first = coder->dongle_1;
-        second = coder->dongle_2;
-    }
-    else
-    {
-        first = coder->dongle_2;
-        second = coder->dongle_1;
-    }
-    if (request_or_grab(coder, first) != 0)
-        return (1);
-    print_log(coder, elapsed_time_ms(coder->sim), GRAB);
-    if (request_or_grab(coder, second) != 0)
-    {
-        release_dongle(&first, get_time_ms());
-        return (1);
-    }
-    print_log(coder, elapsed_time_ms(coder->sim), GRAB);
-    return (0);
+	t_dongle	*first;
+	t_dongle	*second;
+
+	if (coder->coder_id % 2 != 0)
+	{
+		first = coder->dongle_1;
+		second = coder->dongle_2;
+	}
+	else
+	{
+		first = coder->dongle_2;
+		second = coder->dongle_1;
+	}
+	if (request_or_grab(coder, first) != 0)
+		return (1);
+	print_log(coder, elapsed_time_ms(coder->sim), GRAB);
+	if (request_or_grab(coder, second) != 0)
+	{
+		release_dongle(first, get_time_ms());
+		return (1);
+	}
+	print_log(coder, elapsed_time_ms(coder->sim), GRAB);
+	return (0);
 }
 
-void    release_dongle(t_dongle *dongle, long timestamp)
+void	release_dongle(t_dongle *dongle, long timestamp)
 {
-    pthread_mutex_lock(&dongle->d_lock);
-    dongle->last_release = timestamp;
-    dongle->is_available = true;
-    pthread_cond_broadcast(&dongle->d_cond);
-    pthread_mutex_unlock(&dongle->d_lock);
+	pthread_mutex_lock(&dongle->d_lock);
+	dongle->last_release = timestamp;
+	dongle->is_available = true;
+	pthread_cond_broadcast(&dongle->d_cond);
+	pthread_mutex_unlock(&dongle->d_lock);
 }
-
-

@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:32:27 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/07/31 13:32:34 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/03 19:09:12 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ int    ft_parser(int ac, char **av, t_args *args)
 	{
 		n = atoi(av[i]);
 		if (n == -1)
-			return (11);
+			return (1);
 		arg_arr[i - 1] = n;
 		i++;
 	}

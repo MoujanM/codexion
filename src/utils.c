@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:36:54 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/07/31 16:16:21 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/03 17:12:24 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ int     fail_safe(int ret, char *msg)
 long     get_time_ms(void)
 {
     struct timespec ts;
-    
+
     clock_gettime(CLOCK_REALTIME, &ts);
     return (ts.tv_sec * 1000L + ts.tv_nsec / 1000000);
 }

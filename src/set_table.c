@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:32:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/07/31 16:11:17 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/03 17:17:07 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,7 @@ int    init_coders(t_sim *sim, void *coder_routine)
     return (0);
 }
 
-t_sim   *create_simulation(t_args *args, void *coder_routine)
+t_sim   *create_simulation(t_args *args)
 {
     t_sim       *sim;
     t_coder     *coders;
@@ -85,10 +85,8 @@ t_sim   *create_simulation(t_args *args, void *coder_routine)
         return (NULL);
     sim->coders = coders;
     sim->dongles = dongles;
-    sim->stop_sim = false;
+    sim->stop_sim = true;
     fail_safe(pthread_mutex_init(&sim->print_lock, NULL), "Sim Mutex failed");
     fail_safe(pthread_mutex_init(&sim->sim_lock, NULL), "Sim Mutex failed");
-    init_dongles(sim);
-    init_coders(sim, coder_routine);
     return (sim);
 }
