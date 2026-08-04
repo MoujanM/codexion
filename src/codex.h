@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:38:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/03 18:49:10 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/04 19:07:00 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,13 +45,15 @@ typedef struct  s_heap
 // the info-box
 typedef struct  s_simulation
 {
-    int             start_time;
+    bool            coders_ready;
+    long            start_time;
     t_args          *args;
     t_coder         *coders;
     t_dongle        *dongles;
     pthread_t       monitor;
     pthread_mutex_t print_lock;      //to guard logging
     pthread_mutex_t sim_lock;       //to guard box-level info
+    pthread_cond_t  s_cond;
     bool            stop_sim;       //check if burnout or required compiles reached
 
 } t_sim;
@@ -73,6 +75,7 @@ typedef struct  s_dongle
     int             dongle_id;
     bool            is_available;
     long            last_release;
+    int             cooldown;
     pthread_mutex_t d_lock;
     pthread_cond_t  d_cond;
     t_heap          request_heap;

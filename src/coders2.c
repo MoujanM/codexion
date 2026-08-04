@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:58:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/07/31 14:34:26 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/04 19:19:44 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,7 @@ void    debug(t_coder *coder)
     long    now;
     long    debug_time;
 
-    now = get_time_ms();
+    now = elapsed_time_ms(coder->sim);
     print_log(coder, now, DEBUG);
     debug_time = coder->sim->args->time_to_debug;
     usleep(debug_time * 1000);
@@ -50,7 +50,7 @@ void    refactor(t_coder *coder)
     long    now;
     long    refactor_time;
 
-    now = get_time_ms();
+    now = elapsed_time_ms(coder->sim);
     print_log(coder, now, REFACTOR);
     refactor_time = coder->sim->args->time_to_refactor;
     usleep(refactor_time * 1000);
@@ -61,6 +61,8 @@ void    *coder_routine(void *args)
 	t_coder *coder;
 	
 	coder = (t_coder *)args;
+    while (!coder->sim->coders_ready)
+        pthread_cond_wait(&coder->sim->s_cond, &coder->sim->sim_lock);
     while (!coder->sim->stop_sim)
     {
         if (grab_dongles(coder) == 0)

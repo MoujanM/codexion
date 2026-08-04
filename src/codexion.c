@@ -6,18 +6,27 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/03 16:05:29 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/03 18:48:02 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/04 19:26:13 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codex.h"
 
+
 void	init_simulation(t_sim *sim)
 {
 	init_dongles(sim);
-    init_coders(sim, coder_routine);
+    if (init_coders(sim, coder_routine) == 0 && !sim->coders_ready)
+	{
+		pthread_mutex_lock(&sim->sim_lock);
+		sim->coders_ready = true;
+		sim->start_time = get_time_ms();
+		pthread_cond_broadcast(&sim->s_cond);
+		pthread_mutex_unlock(&sim->sim_lock);
+	}
 	fail_safe(pthread_create(&sim->monitor, NULL, monitor_routine, sim),
 		"Monitor thread creation failed");
+	
 }
 
 void	join_coders(t_coder *coders, int n)
@@ -40,8 +49,8 @@ int		codexion(t_args *args)
 	if (!sim)
 		return (1);
 	init_simulation(sim);
-	pthread_join(sim->monitor, NULL);
 	join_coders(sim->coders, args->nb_coders);
+	pthread_join(sim->monitor, NULL);
 	clean_all(sim);
 	return (0);
 }

@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:38:21 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/07/31 16:16:17 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/03 19:36:15 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,9 +73,9 @@ void    insert(t_heap *heap, t_request request)
 
 void   pop_min(t_heap *heap)
 {
-    t_request   root;
+    //t_request   root;
 
-    root = heap->request[0];
+    //root = heap->request[0];
     heap->size--;
     heap->request[0] = heap->request[heap->size];
     bubble_down(heap, 0);

@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:37:17 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/03 18:17:59 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/04 16:11:58 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,7 +39,6 @@ void    *monitor_routine(void *arg)
 {
     int     all_done;
     int     i;
-    long    now;
     t_sim   *sim;
 
     sim = (t_sim *)arg;
@@ -50,11 +49,10 @@ void    *monitor_routine(void *arg)
         while (i < sim->args->nb_coders)
         {
             pthread_mutex_lock(&sim->coders[i].lock);
-            now = elapsed_time_ms(sim);
-            if (coder_burnt(sim, &sim->coders[i], now))
+            if (coder_burnt(sim, &sim->coders[i], elapsed_time_ms(sim)))
             {
                 pthread_mutex_unlock(&sim->coders[i].lock);
-                print_log(&sim->coders[i], now, BURNT);
+                print_log(&sim->coders[i], elapsed_time_ms(sim), BURNT);
                 stop_sim(sim);
                 return (NULL);
             }

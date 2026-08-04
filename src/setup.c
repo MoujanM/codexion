@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   set_table.c                                        :+:      :+:    :+:   */
+/*   setup.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:32:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/03 17:17:07 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/04 19:20:58 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ int    init_dongles(t_sim *sim)
         dongles[i].dongle_id = i + 1;
         dongles[i].is_available = true;
         dongles[i].last_release = 0;
+        dongles[i].cooldown = sim->args->dongle_cooldown;
         pthread_mutex_init(&dongles[i].d_lock, NULL);
         ret = pthread_cond_init(&dongles[i].d_cond, NULL);
         fail_safe(ret, "Mutex cond creation failed.");
@@ -74,9 +75,9 @@ t_sim   *create_simulation(t_args *args)
     sim = malloc(sizeof(t_sim));
     if (!sim)
         return (NULL);
+    sim->coders_ready = false;
     sim->start_time = get_time_ms();
     sim->args = args;
-
     coders = malloc(sizeof(t_coder) * args->nb_coders);
     if (!coders)
         return (NULL);
@@ -85,8 +86,9 @@ t_sim   *create_simulation(t_args *args)
         return (NULL);
     sim->coders = coders;
     sim->dongles = dongles;
-    sim->stop_sim = true;
+    sim->stop_sim = false;
     fail_safe(pthread_mutex_init(&sim->print_lock, NULL), "Sim Mutex failed");
     fail_safe(pthread_mutex_init(&sim->sim_lock, NULL), "Sim Mutex failed");
+    fail_safe(pthread_cond_init(&sim->s_cond, NULL), "Sim Cond failed");
     return (sim);
 }

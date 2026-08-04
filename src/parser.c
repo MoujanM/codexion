@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:32:27 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/03 19:09:12 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/04 15:18:25 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ void	fill_args_struct(int *arg_arr, char *scheduler, t_args *args)
 
 int    ft_parser(int ac, char **av, t_args *args)
 {
-	int		arg_arr[7];
+	int		arg_arr[8];
 	int		i;
 	int		n;
 
