@@ -51,6 +51,10 @@ int		codexion(t_args *args)
 	init_simulation(sim);
 	join_coders(sim->coders, args->nb_coders);
 	pthread_join(sim->monitor, NULL);
-	clean_all(sim);
-	return (0);
+	if (sim->stop_sim)
+	{
+		clean_all(sim);
+		return (0);
+	}
+	return (1);
 }

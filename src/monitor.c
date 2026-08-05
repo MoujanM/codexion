@@ -56,13 +56,15 @@ void    *monitor_routine(void *arg)
                 stop_sim(sim);
                 return (NULL);
             }
-            if (sim->coders[i].nb_compiles < sim->args->nb_compiles_req)
+            else if (sim->coders[i].nb_compiles < sim->args->nb_compiles_req)
                 all_done = 0;
             pthread_mutex_unlock(&sim->coders[i].lock);
             i++;
         }
+        
         if (all_done == 1)
         {
+            // fprintf(stdout, "Required number of compiles reached. Sim stopped.");
             stop_sim(sim);
             return (NULL);
         }

@@ -127,9 +127,9 @@ int         request_or_grab(t_coder *coder, t_dongle *dongle);
 int         grab_dongles(t_coder *coder);
 void        release_dongle(t_dongle *dongle, long timestamp);
 
-void        compile(t_coder *coder);
-void        debug(t_coder *coder);
-void        refactor(t_coder *coder);
+int        compile(t_coder *coder);
+int        debug(t_coder *coder);
+int        refactor(t_coder *coder);
 void        *coder_routine(void *args);
 
 //simulation management

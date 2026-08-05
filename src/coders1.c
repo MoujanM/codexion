@@ -41,7 +41,7 @@ int	request_or_grab(t_coder *coder, t_dongle *dongle)
 			&& dongle->request_heap.request[0].coder_id == coder->coder_id))
 	{
 		if (dongle->last_release == 0)
-			continue;
+			pthread_cond_wait(&dongle->d_cond, &dongle->d_lock);
 		else
 		{
 			to_cooldown = dongle->last_release + dongle->cooldown;
@@ -49,6 +49,11 @@ int	request_or_grab(t_coder *coder, t_dongle *dongle)
 			t.tv_nsec = (to_cooldown % 1000) * 1000000;
 			pthread_cond_timedwait(&dongle->d_cond, &dongle->d_lock, &t);
 		}
+	}
+	if (coder->sim->stop_sim)
+	{
+		pthread_mutex_unlock(&dongle->d_lock);
+		return (1);
 	}
 	pop_min(&dongle->request_heap);
 	dongle->is_available = false;

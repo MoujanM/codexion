@@ -12,11 +12,13 @@
 
 #include "codex.h"
 
-void    compile(t_coder *coder)
+int    compile(t_coder *coder)
 {
     long    now;
     long    compile_time;
 
+    if (coder->sim->stop_sim)
+        return (1);
     now = elapsed_time_ms(coder->sim);
     compile_time = coder->sim->args->time_to_compile;
     print_log(coder, now, COMPILE);
@@ -32,28 +34,35 @@ void    compile(t_coder *coder)
     pthread_mutex_lock(&coder->lock);
     coder->nb_compiles += 1;
     pthread_mutex_unlock(&coder->lock);
+    return (0);
 }
 
-void    debug(t_coder *coder)
+int    debug(t_coder *coder)
 {
     long    now;
     long    debug_time;
 
+    if (coder->sim->stop_sim)
+        return (1);
     now = elapsed_time_ms(coder->sim);
     print_log(coder, now, DEBUG);
     debug_time = coder->sim->args->time_to_debug;
     usleep(debug_time * 1000);
-
+    return (0);
 }
-void    refactor(t_coder *coder)
+
+int    refactor(t_coder *coder)
 {
     long    now;
     long    refactor_time;
 
+    if (coder->sim->stop_sim)
+        return (1);
     now = elapsed_time_ms(coder->sim);
     print_log(coder, now, REFACTOR);
     refactor_time = coder->sim->args->time_to_refactor;
     usleep(refactor_time * 1000);
+    return (0);
 }
 
 void    *coder_routine(void *args)
@@ -65,12 +74,10 @@ void    *coder_routine(void *args)
         pthread_cond_wait(&coder->sim->s_cond, &coder->sim->sim_lock);
     while (!coder->sim->stop_sim)
     {
-        if (grab_dongles(coder) == 0)
-        {
-            compile(coder);
-            debug(coder);
-            refactor(coder);
-        }
+        if (grab_dongles(coder) != 0)
+            break;
+        if (compile(coder) != 0 || debug(coder) != 0 || refactor(coder) != 0)
+            break;
     }
     return (NULL);
 }
