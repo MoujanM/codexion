@@ -26,11 +26,26 @@ t_request	make_request(t_coder *coder)
 	return (request);
 }
 
+void	wait_for_dongle(t_dongle *dongle)
+{
+	long				to_cooldown;
+	struct timespec		t;
+
+	if (dongle->last_release == 0)
+			pthread_cond_wait(&dongle->d_cond, &dongle->d_lock);
+	else
+	{
+		to_cooldown = dongle->last_release + dongle->cooldown;
+		t.tv_sec = to_cooldown / 1000;
+		t.tv_nsec = (to_cooldown % 1000) * 1000000;
+		pthread_cond_timedwait(&dongle->d_cond, &dongle->d_lock, &t);
+	}
+}
+
 int	request_or_grab(t_coder *coder, t_dongle *dongle)
 {
 	t_request			request;
-	long				to_cooldown;
-	struct timespec		t;
+
 
 	if (coder->sim->stop_sim)
 		return (1);
@@ -39,17 +54,7 @@ int	request_or_grab(t_coder *coder, t_dongle *dongle)
 	insert(&dongle->request_heap, request);
 	while (!coder->sim->stop_sim && !(dongle->is_available
 			&& dongle->request_heap.request[0].coder_id == coder->coder_id))
-	{
-		if (dongle->last_release == 0)
-			pthread_cond_wait(&dongle->d_cond, &dongle->d_lock);
-		else
-		{
-			to_cooldown = dongle->last_release + dongle->cooldown;
-			t.tv_sec = to_cooldown / 1000;
-			t.tv_nsec = (to_cooldown % 1000) * 1000000;
-			pthread_cond_timedwait(&dongle->d_cond, &dongle->d_lock, &t);
-		}
-	}
+		wait_for_dongle(dongle);
 	if (coder->sim->stop_sim)
 	{
 		pthread_mutex_unlock(&dongle->d_lock);

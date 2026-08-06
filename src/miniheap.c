@@ -12,11 +12,6 @@
 
 #include "codex.h"
 
-// mini-heap implementation
-
-// if keeping this, move to utils
-// add similar child ops
-
 void    swap(t_request *x, t_request *y)
 {
     t_request   tmp;

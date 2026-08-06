@@ -111,7 +111,7 @@ int     ft_parser(int ac, char **av, t_args *args);
 void	fill_args_struct(int *arg_arr, char *scheduler, t_args *args);
 
 t_sim   *create_simulation(t_args *args);
-void		init_simulation(t_sim *sim);
+void	init_simulation(t_sim *sim);
 int     init_dongles(t_sim *sim);
 int     init_coders(t_sim *sim, void *coder_routine);
 void	join_coders(t_coder *coders, int n);
@@ -123,6 +123,7 @@ void     print_log(t_coder *coder, long timestamp, action act);
 
 //coder actions
 t_request	make_request(t_coder *coder);
+void	    wait_for_dongle(t_dongle *dongle);
 int         request_or_grab(t_coder *coder, t_dongle *dongle);
 int         grab_dongles(t_coder *coder);
 void        release_dongle(t_dongle *dongle, long timestamp);
@@ -156,4 +157,5 @@ int     clean_dongle(t_dongle *dongle);
 int     clean_coder(t_coder *coder);
 int     clean_sim(t_sim *sim);
 int     clean_all(t_sim *sim);
+
 #endif
