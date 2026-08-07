@@ -6,16 +6,16 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:38:49 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/04 17:54:53 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/07 13:12:19 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codex.h"
 
-t_request	make_request(t_coder *coder)
+t_req	make_request(t_coder *coder)
 {
-	t_request	request;
-	int			burn_time;
+	t_req	request;
+	int		burn_time;
 
 	burn_time = coder->sim->args->time_to_burnout;
 	request.coder_id = coder->coder_id;
@@ -32,7 +32,7 @@ void	wait_for_dongle(t_dongle *dongle)
 	struct timespec		t;
 
 	if (dongle->last_release == 0)
-			pthread_cond_wait(&dongle->d_cond, &dongle->d_lock);
+		pthread_cond_wait(&dongle->d_cond, &dongle->d_lock);
 	else
 	{
 		to_cooldown = dongle->last_release + dongle->cooldown;
@@ -44,8 +44,7 @@ void	wait_for_dongle(t_dongle *dongle)
 
 int	request_or_grab(t_coder *coder, t_dongle *dongle)
 {
-	t_request			request;
-
+	t_req	request;
 
 	if (coder->sim->stop_sim)
 		return (1);

@@ -6,12 +6,11 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:32:27 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/04 15:18:25 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/07 13:02:13 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codex.h"
-
 
 void	fill_args_struct(int *arg_arr, char *scheduler, t_args *args)
 {
@@ -25,7 +24,7 @@ void	fill_args_struct(int *arg_arr, char *scheduler, t_args *args)
 	args->scheduler = scheduler;
 }
 
-int    ft_parser(int ac, char **av, t_args *args)
+int	ft_parser(int ac, char **av, t_args *args)
 {
 	int		arg_arr[8];
 	int		i;
@@ -44,7 +43,6 @@ int    ft_parser(int ac, char **av, t_args *args)
 	}
 	if (strcmp(av[i], "fifo") && strcmp(av[i], "edf"))
 		return (1);
-
 	fill_args_struct(arg_arr, av[i], args);
 	return (0);
 }

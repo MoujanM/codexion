@@ -85,8 +85,13 @@ make
 
 ./codexion [number_of_coders] [time_to_burnout] [time_to_compile] [time_to_debug] [time_to_refactor] [number_of_compiles_required] [dongle_cooldown] [scheduler]
 
-#example
+# example
 ./codexion 5 800 200 200 100 3 100 fifo
+
+# quick check for program end with no burnout
+./codexion 5 800 200 200 100 3 100 fifo | tee out.log
+grep "is compiling" out.log | awk '{print $2}' | sort | uniq -c
+
 ```
 
 ## Resources
