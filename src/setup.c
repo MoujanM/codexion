@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:32:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/07 13:07:35 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/24 15:48:27 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,8 +53,16 @@ int	init_coders(t_sim *sim, void *coder_routine)
 		coders[i].coder_id = i + 1;
 		coders[i].last_compile = 0;
 		coders[i].nb_compiles = 0;
-		coders[i].dongle_1 = &dongles[i];
-		coders[i].dongle_2 = &dongles[(i + 1) % n];
+		if (i == n - 1)
+		{
+			coders[i].dongle_1 = &dongles[(i + 1) % n];
+			coders[i].dongle_2 = &dongles[i];
+		}
+		else
+		{
+			coders[i].dongle_1 = &dongles[i];
+			coders[i].dongle_2 = &dongles[(i + 1) % n];
+		}
 		coders[i].sim = sim;
 		fail_safe(pthread_mutex_init(&coders[i].lock, NULL),
 			"Coder mutex failed.");

@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:36:54 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/07 13:10:34 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/24 18:18:23 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,16 @@ void	print_log(t_coder *coder, long timestamp, t_action act)
 	};
 
 	pthread_mutex_lock(&coder->sim->print_lock);
-	printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);
+	if (!is_stopped(coder->sim))
+	{
+		if (act == GRAB)
+		{
+			printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);
+			printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);
+		}
+		else
+			printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);
+	}
 	pthread_mutex_unlock(&coder->sim->print_lock);
 }
 
