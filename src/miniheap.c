@@ -23,8 +23,8 @@ void	swap(t_req *x, t_req *y)
 
 void	bubble_up(t_heap *heap, int idx)
 {
-	while (idx > 0 && heap->request[idx].priority
-		< heap->request[get_parent(idx)].priority)
+	while (idx > 0 && has_priority(heap->request[idx],
+		heap->request[get_parent(idx)]))
 	{
 		swap(&heap->request[idx], &heap->request[get_parent(idx)]);
 		idx = get_parent(idx);
@@ -42,11 +42,11 @@ void	bubble_down(t_heap *heap, int idx)
 		smallest = idx;
 		left_child = 2 * idx + 1;
 		right_child = 2 * idx + 2;
-		if (left_child < heap->size && heap->request[left_child].priority
-			< heap->request[smallest].priority)
+		if (left_child < heap->size && has_priority(
+			heap->request[left_child], heap->request[smallest]))
 			smallest = left_child;
-		if (right_child < heap->size && heap->request[right_child].priority
-			< heap->request[smallest].priority)
+		if (right_child < heap->size && has_priority(heap->request[right_child],
+			heap->request[smallest]))
 			smallest = right_child;
 		if (smallest == idx)
 			break ;
@@ -70,4 +70,11 @@ void	pop_min(t_heap *heap)
 	heap->size--;
 	heap->request[0] = heap->request[heap->size];
 	bubble_down(heap, 0);
+}
+
+bool	has_priority(t_req request1, t_req request2)
+{
+	if (request1.priority != request2.priority)
+		return (request1.priority < request2.priority);
+	return (request1.sequence < request2.sequence);
 }

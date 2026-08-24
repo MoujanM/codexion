@@ -2,6 +2,7 @@ NAME = codexion
 
 SRC = src/parser.c src/setup.c src/utils.c \
 	  src/miniheap.c src/coders1.c src/coders2.c \
+	  src/dongles.c \
 	  src/cleanup.c src/codexion.c  src/monitor.c \
 	  src/main.c
 

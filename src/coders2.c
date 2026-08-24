@@ -17,12 +17,12 @@ int	compile(t_coder *coder)
 	long	now;
 	long	compile_time;
 
-	if (coder->sim->stop_sim)
+	if (is_stopped(coder->sim))
 		return (1);
 	now = elapsed_time_ms(coder->sim);
-	compile_time = coder->sim->args->time_to_compile;
 	print_log(coder, now, COMPILE);
 	pthread_mutex_lock(&coder->lock);
+	compile_time = coder->sim->args->time_to_compile;
 	coder->last_compile = now;
 	pthread_mutex_unlock(&coder->lock);
 	usleep(compile_time * 1000);
@@ -39,7 +39,7 @@ int	debug(t_coder *coder)
 	long	now;
 	long	debug_time;
 
-	if (coder->sim->stop_sim)
+	if (is_stopped(coder->sim))
 		return (1);
 	now = elapsed_time_ms(coder->sim);
 	print_log(coder, now, DEBUG);
@@ -53,7 +53,7 @@ int	refactor(t_coder *coder)
 	long	now;
 	long	refactor_time;
 
-	if (coder->sim->stop_sim)
+	if (is_stopped(coder->sim))
 		return (1);
 	now = elapsed_time_ms(coder->sim);
 	print_log(coder, now, REFACTOR);
@@ -65,13 +65,17 @@ int	refactor(t_coder *coder)
 void	*coder_routine(void *args)
 {
 	t_coder	*coder;
+	int		t_sleep;
 
 	coder = (t_coder *)args;
 	pthread_mutex_lock(&coder->sim->sim_lock);
+	t_sleep = coder->sim->args->time_to_compile / 5;
 	while (!coder->sim->coders_ready)
 		pthread_cond_wait(&coder->sim->s_cond, &coder->sim->sim_lock);
 	pthread_mutex_unlock(&coder->sim->sim_lock);
-	while (!coder->sim->stop_sim)
+	if (coder->coder_id % 2 == 0)
+        usleep(t_sleep * 1000);
+	while (!is_stopped(coder->sim))
 	{
 		if (grab_dongles(coder) != 0)
 			break ;

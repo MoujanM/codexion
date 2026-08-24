@@ -34,11 +34,12 @@ typedef struct s_request
 {
 	int		coder_id;
 	long	priority;
+	long	sequence;
 }	t_req;
 
 typedef struct s_heap
 {
-	t_req	request[MAX];
+	t_req	request[2];
 	int		size;
 }	t_heap;
 
@@ -47,12 +48,14 @@ typedef struct s_simulation
 {
 	bool			coders_ready;
 	long			start_time;
+	long			seq_counter;
 	t_args			*args;
 	t_coder			*coders;
 	t_dongle		*dongles;
 	pthread_t		monitor;
 	pthread_mutex_t	print_lock;	//to guard logging
 	pthread_mutex_t	sim_lock;	//to guard box-level info
+	pthread_mutex_t	seq_lock;
 	pthread_cond_t	s_cond;
 	bool			stop_sim;
 }	t_sim;
@@ -119,17 +122,24 @@ int		init_dongles(t_sim *sim);
 int		init_coders(t_sim *sim, void *coder_routine);
 void	join_coders(t_coder *coders, int n);
 int		codexion(t_args *args);
+bool	is_stopped(t_sim *sim);
+long	next_sequence(t_sim *sim);
 
 long	get_time_ms(void);
 long	elapsed_time_ms(t_sim *sim);
 void	print_log(t_coder *coder, long timestamp, t_action act);
 
 //coder actions
-void	wait_for_dongle(t_dongle *dongle);
-int		request_or_grab(t_coder *coder, t_dongle *dongle);
+// void	wait_for_dongle(t_dongle *dongle);
+// int		request_or_grab(t_coder *coder, t_dongle *dongle);
 int		grab_dongles(t_coder *coder);
 void	release_dongle(t_dongle *dongle, long timestamp);
 t_req	make_request(t_coder *coder);
+void    wait_for_cooldown(t_dongle *first, t_dongle *second);
+long    remaining_cooldown(t_dongle *dongle);
+void    register_requests(t_coder *coder, t_dongle *first, t_dongle *second);
+bool    is_ready(t_dongle *dongle, t_coder *coder);
+int     take_if_available(t_coder *coder, t_dongle *first, t_dongle *second);
 
 int		compile(t_coder *coder);
 int		debug(t_coder *coder);
@@ -149,6 +159,7 @@ void	bubble_down(t_heap *heap, int idx);
 void	insert(t_heap *heap, t_req request);
 void	pop_min(t_heap *heap);
 int		get_parent(int idx);
+bool	has_priority(t_req request1, t_req request2);
 
 // monitor
 void	stop_sim(t_sim *sim);

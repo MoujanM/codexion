@@ -76,6 +76,7 @@ t_sim	*create_simulation(t_args *args)
 		return (NULL);
 	sim->coders_ready = false;
 	sim->start_time = get_time_ms();
+	sim->seq_counter = 0;
 	sim->args = args;
 	coders = malloc(sizeof(t_coder) * args->nb_coders);
 	if (!coders)
@@ -88,6 +89,27 @@ t_sim	*create_simulation(t_args *args)
 	sim->stop_sim = false;
 	fail_safe(pthread_mutex_init(&sim->print_lock, NULL), "Sim Mutex failed");
 	fail_safe(pthread_mutex_init(&sim->sim_lock, NULL), "Sim Mutex failed");
+	fail_safe(pthread_mutex_init(&sim->seq_lock, NULL), "Sim Mutex failed");
 	fail_safe(pthread_cond_init(&sim->s_cond, NULL), "Sim Cond failed");
 	return (sim);
+}
+
+bool	is_stopped(t_sim *sim)
+{
+	bool	stopped;
+
+	pthread_mutex_lock(&sim->sim_lock);
+	stopped = sim->stop_sim;
+	pthread_mutex_unlock(&sim->sim_lock);
+	return (stopped);
+}
+
+long	next_sequence(t_sim *sim)
+{
+	long	seq;
+
+	pthread_mutex_lock(&sim->seq_lock);
+	seq = sim->seq_counter++;
+	pthread_mutex_unlock(&sim->seq_lock);
+	return (seq);
 }
