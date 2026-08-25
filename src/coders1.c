@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:38:49 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/07 13:12:19 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/25 18:34:49 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,95 +33,16 @@ t_req	make_request(t_coder *coder)
 	return (request);
 }
 
-// void	manage_wait(t_coder *coder, t_dongle *dongle, int deadline)
-// {
-// 	long				to_cooldown;
-// 	struct timespec		t;
+void	register_requests(t_coder *coder, t_dongle *first, t_dongle *second)
+{
+	t_req	request;
 
-// 	while (!is_stopped(coder->sim))
-// 	{
-// 		if (!dongle->is_available || dongle->request_heap.request[0].coder_id != coder->coder_id)
-// 		{
-// 			pthread_cond_wait(&dongle->d_cond, &dongle->d_lock);
-// 			continue ;
-// 		}
-// 		to_cooldown = dongle->last_release + dongle->cooldown;
-// 		if (dongle->last_release != 0 && get_time_ms() < to_cooldown)
-// 		{
-// 			t.tv_sec = to_cooldown / 1000;
-// 			t.tv_nsec = (to_cooldown % 1000) * 1000000;
-// 			pthread_cond_timedwait(&dongle->d_cond, &dongle->d_lock, &t);
-// 			continue ;
-// 		}
-// 		break ;
-// 	}
-// }
-
-// void	wait_for_dongle(t_dongle *dongle)
-// {
-// 	long				to_cooldown;
-// 	struct timespec		t;
-
-// 	if (dongle->last_release == 0)
-// 		pthread_cond_wait(&dongle->d_cond, &dongle->d_lock);
-// 	else
-// 	{
-// 		to_cooldown = dongle->last_release + dongle->cooldown;
-// 		t.tv_sec = to_cooldown / 1000;
-// 		t.tv_nsec = (to_cooldown % 1000) * 1000000;
-// 		pthread_cond_timedwait(&dongle->d_cond, &dongle->d_lock, &t);
-// 	}
-// }
-
-// int	request_or_grab(t_coder *coder, t_dongle *dongle)
-// {
-// 	t_req	request;
-// 	int		max_wait;
-
-// 	if (is_stopped(coder->sim))
-// 		return (1);
-// 	request = make_request(coder);
-// 	pthread_mutex_lock(&dongle->d_lock);
-// 	max_wait = dongle->cooldown / 2;
-// 	insert(&dongle->request_heap, request);
-// 	manage_wait(coder, dongle, max_wait);
-// 	if (is_stopped(coder->sim))
-// 	{
-// 		pthread_mutex_unlock(&dongle->d_lock);
-// 		return (1);
-// 	}
-// 	pop_min(&dongle->request_heap);
-// 	dongle->is_available = false;
-// 	pthread_mutex_unlock(&dongle->d_lock);
-// 	return (0);
-// }
-
-// int	grab_dongles(t_coder *coder)
-// {
-// 	t_dongle	*first;
-// 	t_dongle	*second;
-
-// 	if (coder->coder_id % 2 != 0)
-// 	{
-// 		first = coder->dongle_1;
-// 		second = coder->dongle_2;
-// 	}
-// 	else
-// 	{
-// 		first = coder->dongle_2;
-// 		second = coder->dongle_1;
-// 	}
-// 	if (request_or_grab(coder, first) != 0)
-// 		return (1);
-// 	print_log(coder, elapsed_time_ms(coder->sim), GRAB);
-// 	if (request_or_grab(coder, second) != 0)
-// 	{
-// 		release_dongle(first, get_time_ms());
-// 		return (1);
-// 	}
-// 	print_log(coder, elapsed_time_ms(coder->sim), GRAB);
-// 	return (0);
-// }
+	request = make_request(coder);
+	lock_pair(first, second);
+	insert(&first->request_heap, request);
+	insert(&second->request_heap, request);
+	unlock_pair(first, second);
+}
 
 void	release_dongle(t_dongle *dongle, long timestamp)
 {
@@ -130,4 +51,24 @@ void	release_dongle(t_dongle *dongle, long timestamp)
 	dongle->is_available = true;
 	pthread_cond_broadcast(&dongle->d_cond);
 	pthread_mutex_unlock(&dongle->d_lock);
+}
+
+void	lock_pair(t_dongle *a, t_dongle *b)
+{
+	if (a->dongle_id < b->dongle_id)
+	{
+		pthread_mutex_lock(&a->d_lock);
+		pthread_mutex_lock(&b->d_lock);
+	}
+	else
+	{
+		pthread_mutex_lock(&b->d_lock);
+		pthread_mutex_lock(&a->d_lock);
+	}
+}
+
+void	unlock_pair(t_dongle *a, t_dongle *b)
+{
+	pthread_mutex_unlock(&a->d_lock);
+	pthread_mutex_unlock(&b->d_lock);
 }

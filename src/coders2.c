@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:58:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/07 15:00:46 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/25 19:25:00 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,12 +74,14 @@ void	*coder_routine(void *args)
 		pthread_cond_wait(&coder->sim->s_cond, &coder->sim->sim_lock);
 	pthread_mutex_unlock(&coder->sim->sim_lock);
 	if (coder->coder_id % 2 == 0)
-        usleep(t_sleep * 1000);
+		usleep(t_sleep * 1000);
 	while (!is_stopped(coder->sim))
 	{
 		if (grab_dongles(coder) != 0)
 			break ;
-		if (compile(coder) != 0 || debug(coder) != 0 || refactor(coder) != 0)
+		if (compile(coder) != 0
+			|| debug(coder) != 0
+			|| refactor(coder) != 0)
 			break ;
 	}
 	return (NULL);

@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:38:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/07 15:11:49 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/25 18:41:31 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,8 +22,6 @@
 # include <stdbool.h>
 # include <time.h>
 // #include <linux/time.h>
-
-# define MAX 100      //arbitrary for heap
 
 typedef struct s_args		t_args;
 typedef struct s_coder		t_coder;
@@ -122,6 +120,7 @@ int		init_dongles(t_sim *sim);
 int		init_coders(t_sim *sim, void *coder_routine);
 void	join_coders(t_coder *coders, int n);
 int		codexion(t_args *args);
+
 bool	is_stopped(t_sim *sim);
 long	next_sequence(t_sim *sim);
 
@@ -130,16 +129,18 @@ long	elapsed_time_ms(t_sim *sim);
 void	print_log(t_coder *coder, long timestamp, t_action act);
 
 //coder actions
-// void	wait_for_dongle(t_dongle *dongle);
-// int		request_or_grab(t_coder *coder, t_dongle *dongle);
+
+void	register_requests(t_coder *coder, t_dongle *first, t_dongle *second);
+bool	is_ready(t_dongle *dongle, t_coder *coder);
+int		take_if_available(t_coder *coder, t_dongle *first, t_dongle *second);
+
 int		grab_dongles(t_coder *coder);
 void	release_dongle(t_dongle *dongle, long timestamp);
 t_req	make_request(t_coder *coder);
-void    wait_for_cooldown(t_dongle *first, t_dongle *second);
-long    remaining_cooldown(t_dongle *dongle);
-void    register_requests(t_coder *coder, t_dongle *first, t_dongle *second);
-bool    is_ready(t_dongle *dongle, t_coder *coder);
-int     take_if_available(t_coder *coder, t_dongle *first, t_dongle *second);
+void	wait_on_dongle(t_dongle *dongle, t_coder *coder);
+
+void	lock_pair(t_dongle *a, t_dongle *b);
+void	unlock_pair(t_dongle *a, t_dongle *b);
 
 int		compile(t_coder *coder);
 int		debug(t_coder *coder);

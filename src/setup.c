@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:32:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/24 15:48:27 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/25 19:10:31 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,29 @@ int	init_dongles(t_sim *sim)
 	return (0);
 }
 
+static void	init_single_coder(t_sim *sim, int i, void *coder_routine)
+{
+	t_coder	*coder;
+	int		n;
+
+	coder = &sim->coders[i];
+	n = sim->args->nb_coders;
+	coder->coder_id = i + 1;
+	coder->last_compile = 0;
+	coder->nb_compiles = 0;
+	if (i == n - 1)
+	{
+		coder->dongle_1 = &sim->dongles[(i + 1) % n];
+		coder->dongle_2 = &sim->dongles[i];
+	}
+	else
+	{
+		coder->dongle_1 = &sim->dongles[i];
+		coder->dongle_2 = &sim->dongles[(i + 1) % n];
+	}
+	coder->sim = sim;
+}
+
 int	init_coders(t_sim *sim, void *coder_routine)
 {
 	t_coder		*coders;
@@ -50,20 +73,7 @@ int	init_coders(t_sim *sim, void *coder_routine)
 	i = 0;
 	while (i < n)
 	{
-		coders[i].coder_id = i + 1;
-		coders[i].last_compile = 0;
-		coders[i].nb_compiles = 0;
-		if (i == n - 1)
-		{
-			coders[i].dongle_1 = &dongles[(i + 1) % n];
-			coders[i].dongle_2 = &dongles[i];
-		}
-		else
-		{
-			coders[i].dongle_1 = &dongles[i];
-			coders[i].dongle_2 = &dongles[(i + 1) % n];
-		}
-		coders[i].sim = sim;
+		init_single_coder(sim, i, coder_routine);
 		fail_safe(pthread_mutex_init(&coders[i].lock, NULL),
 			"Coder mutex failed.");
 		fail_safe(pthread_create(&coders[i].thread, NULL,
@@ -100,24 +110,4 @@ t_sim	*create_simulation(t_args *args)
 	fail_safe(pthread_mutex_init(&sim->seq_lock, NULL), "Sim Mutex failed");
 	fail_safe(pthread_cond_init(&sim->s_cond, NULL), "Sim Cond failed");
 	return (sim);
-}
-
-bool	is_stopped(t_sim *sim)
-{
-	bool	stopped;
-
-	pthread_mutex_lock(&sim->sim_lock);
-	stopped = sim->stop_sim;
-	pthread_mutex_unlock(&sim->sim_lock);
-	return (stopped);
-}
-
-long	next_sequence(t_sim *sim)
-{
-	long	seq;
-
-	pthread_mutex_lock(&sim->seq_lock);
-	seq = sim->seq_counter++;
-	pthread_mutex_unlock(&sim->seq_lock);
-	return (seq);
 }

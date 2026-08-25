@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/03 16:05:29 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/07 13:50:25 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/25 18:55:48 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ int	codexion(t_args *args)
 	init_simulation(sim);
 	join_coders(sim->coders, args->nb_coders);
 	pthread_join(sim->monitor, NULL);
-	if (sim->stop_sim)
+	if (is_stopped(sim))
 	{
 		clean_all(sim);
 		return (0);

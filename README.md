@@ -5,11 +5,35 @@ Mastering the race for resources in a variation of the Dining Philosophers Probl
 
 ## Description
 
-Codexion is a multithreaded C simulation inspired by the Dining Philosophers problem. A given number of coders compete for shared dongles to perform compile, debug, and refactor actions, powering up a central quantum compiler. A coder may only compile when holding two dongles, one in each hand. 
+Codexion is a multithreaded C simulation inspired by the Dining Philosophers problem. A given number of coders compete for shared dongles to perform compile, debug, and refactor actions, powering up a central quantum compiler. A coder may only compile when holding two dongles, one in each hand. Dongles are released after each compile and are re-useable once a cooldown period has passed.
 
 The goal is to build a multithreaded architecture that prevents deadlocks and avoids races, while ensuring all coders compile regularly and avoid burnout. The simulation uses configurable timing, scheduling, and burnout rules to model contention and resource starvation.
 
 Key concepts covered in the project: concurrency, pthreads, mutex, race conditions
+
+## Instructions
+
+The program `codexion` is compiled with strict flags `-Wall -Wextra -Werror -pthread` on `make` command. 
+
+Run the executable with the following arguments: 
+
+```bash
+make
+
+./codexion [number_of_coders] [time_to_burnout] [time_to_compile] [time_to_debug] [time_to_refactor] [number_of_compiles_required] [dongle_cooldown] [scheduler]
+
+# example
+./codexion 5 800 200 200 100 3 100 fifo
+
+# quick check for program end with no burnout
+./codexion 5 800 200 200 100 3 100 fifo | tee out.log
+grep "is compiling" out.log | awk '{print $2}' | sort | uniq -c
+
+# valgrind checks
+valgrind --tool=helgrind ./codexion 5 800 200 200 100 3 100 edf / fifo
+valgrind --tool=drd ./codexion 5 800 200 200 100 3 100 edf / fifo
+
+```
 
 ### Blocking cases handled
 
@@ -18,12 +42,12 @@ Key concepts covered in the project: concurrency, pthreads, mutex, race conditio
 | Condition | Status | How |
 | --- | --- | --- |
 | Mutual Exculsion | Present (Inherent) | Dongles are exclusive resources by design: equal number of dongles & coders, 2 dongles needed per coder. |
-| Hold & Wait | Present (Not eliminated) | If a coder gets their first dongle, they hold it while waiting for their second dongle.|
+| Hold & Wait | **Eliminated** | A coder can only acquire dongles if both are available, otherwise they wait.|
 | No Preemption | Present (Not eliminated) | A dongle held by a coder is never forcibly removed from them. |
-| Circular Wait | **Eliminated** | Deterministic pickup order alternating based on coder parity: odd: dongle_1→dongle_2, even: reversed. This prevents a circular wait from ever forming. |
+| Circular Wait | **Eliminated** | Dijsktra's Resource Hierarchy ensures always the lower-indexed dongle gets picked up first, thus breaking circular wait. |
 
 Additional measures have been implemented; including:
-- Each dongle manages its requests through a **priority queue** implemented with a mini-heap. Priorities are determined by the given arbitration policy **FIFO** (first in first out) or **EDF** (earliest deadline first). This, together with the use of a condition variable, means coders block instead of busy-waiting while another coder holds the resource — directly preventing **starvation**.
+- Each dongle manages its requests through a **priority queue** implemented with a mini-heap. Priorities are determined by the given arbitration policy **FIFO** (first in first out) or **EDF** (earliest deadline first). A tie-breaker sequencing is implemented to make the arbitration policy deterministic. This, together with the use of a condition variable, means coders block instead of busy-waiting while another coder holds the resource — directly preventing **starvation**.
 - Dongles' cooldown after release is enforced using **timed waits** so threads do not immediately retry and starve each other.
 - **Burnout detection** is handled by a dedicated monitor thread sweeping at a tight interval (3ms), with the burnout timestamp captured at the exact moment of detection — not at print time — to stay within the required 10ms precision window.
 - **Log serialization** is enforced by a single print mutex, so concurrent `print_log` calls from different coder threads never interleave mid-line.
@@ -76,32 +100,17 @@ On first condition it prints the burnout message, using the timestamp captured a
 | One coder perpetually losing dongle contention (starvation) | Priority-ordered heap (FIFO arrival order or EDF deadline) guarantees the longest-waiting/most-urgent request wins, not arbitrary OS wakeup order |
 
 
-## Instructions
-
-The program `codexion` is compiled with strict flags `-Wall -Wextra -Werror -pthread` on command. 
-Run the executable with the following arguments: 
-```bash
-make
-
-./codexion [number_of_coders] [time_to_burnout] [time_to_compile] [time_to_debug] [time_to_refactor] [number_of_compiles_required] [dongle_cooldown] [scheduler]
-
-# example
-./codexion 5 800 200 200 100 3 100 fifo
-
-# quick check for program end with no burnout
-./codexion 5 800 200 200 100 3 100 fifo | tee out.log
-grep "is compiling" out.log | awk '{print $2}' | sort | uniq -c
-
-```
-
 ## Resources
 - [The Dining Philosophers problem and different ways of solving it](https://zerobone.net/blog/cs/dining-philosophers-problem/)
+- [Dining Philosophers Problem](https://eng.libretexts.org/Courses/Delta_College/Operating_System%3A_The_Basics/06%3A_Deadlock/6.4%3A_Dining_Philosopher_Problem)
 - [Threads, Mutexes and Concurrent Programming in C](https://www.codequoi.com/en/threads-mutexes-and-concurrent-programming-in-c/)
 - [POSIX Threads (Pthreads): Creation and Termination](https://circuitlabs.net/posix-threads-pthreads-creation-and-termination/)
 - [Pthreads: Mutexes for Protecting Critical Sections](https://circuitlabs.net/pthreads-mutexes-for-protecting-critical-sections/)
 - [Pthreads: Condition Variables for Signaling Between Threads](https://circuitlabs.net/pthreads-condition-variables-for-signaling-between-threads/)
+- [Peer solution](https://github.com/browser22nd/codexion)
 
 ### AI usage
 
 AI (Claude) was used as a tutoring aid throughout development — for conceptual explanations, especially putting information from various resources into workable roadmap, targeted code review to catch bugs (pointer misuse, race conditions, lock-ordering issues), and guided debugging sessions (GDB usage tutorial, tracing timing bugs).
+Gemini was used to understand and ultimately rectify a particular Helgrind "dubious" error.
 All design decisions, struct layouts, and final code were written and understood by the author; AI was not used to generate solutions.
