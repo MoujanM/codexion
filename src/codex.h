@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:38:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/25 18:41:31 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/09/23 18:49:38 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,12 +51,19 @@ typedef struct s_simulation
 	t_coder			*coders;
 	t_dongle		*dongles;
 	pthread_t		monitor;
-	pthread_mutex_t	print_lock;	//to guard logging
-	pthread_mutex_t	sim_lock;	//to guard box-level info
+	pthread_mutex_t	print_lock;
+	pthread_mutex_t	sim_lock;
 	pthread_mutex_t	seq_lock;
 	pthread_cond_t	s_cond;
 	bool			stop_sim;
-}	t_sim;
+	int			dongles_init;
+	int			coders_init;
+	bool			monitor_init;
+	bool			print_lock_init;
+	bool			sim_lock_init;
+	bool			seq_lock_init;
+	bool			s_cond_init;
+} t_sim;
 
 typedef struct s_args
 {
@@ -142,6 +149,7 @@ void	wait_on_dongle(t_dongle *dongle, t_coder *coder);
 void	lock_pair(t_dongle *a, t_dongle *b);
 void	unlock_pair(t_dongle *a, t_dongle *b);
 
+void	*lone_coder(t_coder *coder, t_dongle *dongle);	
 int		compile(t_coder *coder);
 int		debug(t_coder *coder);
 int		refactor(t_coder *coder);
@@ -151,7 +159,7 @@ void	*coder_routine(void *args);
 void	print_log(t_coder *coder, long timestamp, t_action act);
 long	get_time_ms(void);
 long	elapsed_time_ms(t_sim *sim);
-int		fail_safe(int ret, char *msg);
+int		fail_safe(int ret, char *msg, t_sim *sim);
 
 // mini-heap
 void	swap(t_req *x, t_req *y);

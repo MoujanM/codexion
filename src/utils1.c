@@ -1,23 +1,24 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utils.c                                            :+:      :+:    :+:   */
+/*   utils1.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:36:54 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/24 18:18:23 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/09/23 18:49:38 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codex.h"
 
-int	fail_safe(int ret, char *msg)
+int	fail_safe(int ret, char *msg, t_sim *sim)
 {
 	if (ret != 0)
 	{
 		fprintf(stderr, "Encountered Error: %s\n", msg);
-		exit (1);
+		if (sim)
+			clean_all(sim);
 	}
 	return (ret);
 }
@@ -48,7 +49,9 @@ void	print_log(t_coder *coder, long timestamp, t_action act)
 	pthread_mutex_lock(&coder->sim->print_lock);
 	if (!is_stopped(coder->sim))
 	{
-		if (act == GRAB)
+		if (act == GRAB && coder->sim->args->nb_coders == 1)
+			printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);
+		else if (act == GRAB)
 		{
 			printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);
 			printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);

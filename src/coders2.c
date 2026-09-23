@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:58:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/25 19:25:00 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/27 16:37:08 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,6 +73,8 @@ void	*coder_routine(void *args)
 	while (!coder->sim->coders_ready)
 		pthread_cond_wait(&coder->sim->s_cond, &coder->sim->sim_lock);
 	pthread_mutex_unlock(&coder->sim->sim_lock);
+	if (coder->sim->args->nb_coders == 1)
+		return (lone_coder(coder, coder->dongle_1));
 	if (coder->coder_id % 2 == 0)
 		usleep(t_sleep * 1000);
 	while (!is_stopped(coder->sim))

@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:32:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/25 19:10:31 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/09/23 18:51:39 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,14 +30,14 @@ int	init_dongles(t_sim *sim)
 		dongles[i].cooldown = sim->args->dongle_cooldown;
 		pthread_mutex_init(&dongles[i].d_lock, NULL);
 		ret = pthread_cond_init(&dongles[i].d_cond, NULL);
-		fail_safe(ret, "Mutex cond creation failed.");
+		fail_safe(ret, "Mutex cond creation failed.", sim);
 		dongles[i].request_heap.size = 0;
 		i++;
 	}
 	return (0);
 }
 
-static void	init_single_coder(t_sim *sim, int i, void *coder_routine)
+static void	init_single_coder(t_sim *sim, int i)
 {
 	t_coder	*coder;
 	int		n;
@@ -47,7 +47,12 @@ static void	init_single_coder(t_sim *sim, int i, void *coder_routine)
 	coder->coder_id = i + 1;
 	coder->last_compile = 0;
 	coder->nb_compiles = 0;
-	if (i == n - 1)
+	if (n == 1)
+	{
+		coder->dongle_1 = &sim->dongles[i];
+		coder->dongle_2 = NULL;
+	}
+	else if (i == n - 1)
 	{
 		coder->dongle_1 = &sim->dongles[(i + 1) % n];
 		coder->dongle_2 = &sim->dongles[i];
@@ -63,21 +68,23 @@ static void	init_single_coder(t_sim *sim, int i, void *coder_routine)
 int	init_coders(t_sim *sim, void *coder_routine)
 {
 	t_coder		*coders;
-	t_dongle	*dongles;
 	int			n;
 	int			i;
 
 	coders = sim->coders;
-	dongles = sim->dongles;
 	n = sim->args->nb_coders;
 	i = 0;
 	while (i < n)
 	{
-		init_single_coder(sim, i, coder_routine);
-		fail_safe(pthread_mutex_init(&coders[i].lock, NULL),
-			"Coder mutex failed.");
-		fail_safe(pthread_create(&coders[i].thread, NULL,
-				coder_routine, (void *)&coders[i]), "Thread creation failed.");
+		init_single_coder(sim, i);
+		if (fail_safe(pthread_mutex_init(&coders[i].lock, NULL),
+			"Coder mutex failed.", sim) != 0)
+			return (1);
+		if (fail_safe(pthread_create(&coders[i].thread, NULL,
+				coder_routine, (void *)&coders[i]),
+			"Thread creation failed.", sim) != 0)
+			return (1);
+		sim->coders_init = i + 1;
 		i++;
 	}
 	return (0);
@@ -85,29 +92,37 @@ int	init_coders(t_sim *sim, void *coder_routine)
 
 t_sim	*create_simulation(t_args *args)
 {
-	t_sim		*sim;
-	t_coder		*coders;
-	t_dongle	*dongles;
+	t_sim	*sim;
 
-	sim = malloc(sizeof(t_sim));
+	sim = malloc(sizeof(*sim));
 	if (!sim)
 		return (NULL);
-	sim->coders_ready = false;
-	sim->start_time = get_time_ms();
-	sim->seq_counter = 0;
+	memset(sim, 0, sizeof(*sim));
 	sim->args = args;
-	coders = malloc(sizeof(t_coder) * args->nb_coders);
-	if (!coders)
+	sim->coders = malloc(sizeof(*sim->coders) * args->nb_coders);
+	sim->dongles = malloc(sizeof(*sim->dongles) * args->nb_coders);
+	if (!sim->coders || !sim->dongles)
+	{
+		free(sim->coders);
+		free(sim->dongles);
+		free(sim);
 		return (NULL);
-	dongles = malloc(sizeof(t_dongle) * args->nb_coders);
-	if (!dongles)
+	}
+	if (fail_safe(pthread_mutex_init(&sim->print_lock, NULL),
+		"Sim Mutex failed", sim) != 0)
 		return (NULL);
-	sim->coders = coders;
-	sim->dongles = dongles;
-	sim->stop_sim = false;
-	fail_safe(pthread_mutex_init(&sim->print_lock, NULL), "Sim Mutex failed");
-	fail_safe(pthread_mutex_init(&sim->sim_lock, NULL), "Sim Mutex failed");
-	fail_safe(pthread_mutex_init(&sim->seq_lock, NULL), "Sim Mutex failed");
-	fail_safe(pthread_cond_init(&sim->s_cond, NULL), "Sim Cond failed");
+	sim->print_lock_init = true;
+	if (fail_safe(pthread_mutex_init(&sim->sim_lock, NULL),
+		"Sim Mutex failed", sim) != 0)
+		return (NULL);
+	sim->sim_lock_init = true;
+	if (fail_safe(pthread_mutex_init(&sim->seq_lock, NULL),
+		"Sim Mutex failed", sim) != 0)
+		return (NULL);
+	sim->seq_lock_init = true;
+	if (fail_safe(pthread_cond_init(&sim->s_cond, NULL),
+		"Sim Cond failed", sim) != 0)
+		return (NULL);
+	sim->s_cond_init = true;
 	return (sim);
 }
