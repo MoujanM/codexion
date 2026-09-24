@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:38:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/09/23 18:49:38 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/09/24 16:23:48 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,19 +51,14 @@ typedef struct s_simulation
 	t_coder			*coders;
 	t_dongle		*dongles;
 	pthread_t		monitor;
-	pthread_mutex_t	print_lock;
-	pthread_mutex_t	sim_lock;
+	pthread_mutex_t	print_lock;	//to guard logging
+	pthread_mutex_t	sim_lock;	//to guard box-level info
 	pthread_mutex_t	seq_lock;
 	pthread_cond_t	s_cond;
 	bool			stop_sim;
-	int			dongles_init;
-	int			coders_init;
-	bool			monitor_init;
-	bool			print_lock_init;
-	bool			sim_lock_init;
-	bool			seq_lock_init;
-	bool			s_cond_init;
-} t_sim;
+	int				d_init;
+	int				c_init;
+}	t_sim;
 
 typedef struct s_args
 {
@@ -159,7 +154,7 @@ void	*coder_routine(void *args);
 void	print_log(t_coder *coder, long timestamp, t_action act);
 long	get_time_ms(void);
 long	elapsed_time_ms(t_sim *sim);
-int		fail_safe(int ret, char *msg, t_sim *sim);
+int		fail_safe(int ret, char *msg);
 
 // mini-heap
 void	swap(t_req *x, t_req *y);

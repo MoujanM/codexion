@@ -47,6 +47,7 @@ valgrind --tool=drd ./codexion 5 800 200 200 100 3 100 edf / fifo
 | Circular Wait | **Eliminated** | Dijsktra's Resource Hierarchy ensures always the lower-indexed dongle gets picked up first, thus breaking circular wait. |
 
 Additional measures have been implemented; including:
+- Table with only one coder handled separately as a special case.
 - Each dongle manages its requests through a **priority queue** implemented with a mini-heap. Priorities are determined by the given arbitration policy **FIFO** (first in first out) or **EDF** (earliest deadline first). A tie-breaker sequencing is implemented to make the arbitration policy deterministic. This, together with the use of a condition variable, means coders block instead of busy-waiting while another coder holds the resource — directly preventing **starvation**.
 - Dongles' cooldown after release is enforced using **timed waits** so threads do not immediately retry and starve each other.
 - **Burnout detection** is handled by a dedicated monitor thread sweeping at a tight interval (3ms), with the burnout timestamp captured at the exact moment of detection — not at print time — to stay within the required 10ms precision window.
@@ -112,5 +113,7 @@ On first condition it prints the burnout message, using the timestamp captured a
 ### AI usage
 
 AI (Claude) was used as a tutoring aid throughout development — for conceptual explanations, especially putting information from various resources into workable roadmap, targeted code review to catch bugs (pointer misuse, race conditions, lock-ordering issues), and guided debugging sessions (GDB usage tutorial, tracing timing bugs).
+
 Gemini was used to understand and ultimately rectify a particular Helgrind "dubious" error.
+
 All design decisions, struct layouts, and final code were written and understood by the author; AI was not used to generate solutions.

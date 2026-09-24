@@ -6,19 +6,18 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:36:54 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/09/23 18:49:38 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/08/27 16:44:00 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codex.h"
 
-int	fail_safe(int ret, char *msg, t_sim *sim)
+int	fail_safe(int ret, char *msg)
 {
 	if (ret != 0)
 	{
 		fprintf(stderr, "Encountered Error: %s\n", msg);
-		if (sim)
-			clean_all(sim);
+		exit (1);
 	}
 	return (ret);
 }

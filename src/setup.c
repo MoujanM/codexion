@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:32:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/09/23 18:51:39 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/09/24 16:46:45 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,24 +15,26 @@
 int	init_dongles(t_sim *sim)
 {
 	t_dongle	*dongles;
-	int			n;
 	int			i;
-	int			ret;
 
 	dongles = sim->dongles;
-	n = sim->args->nb_coders;
 	i = 0;
-	while (i <= n - 1)
+	while (i < sim->args->nb_coders)
 	{
+		if (pthread_mutex_init(&dongles[i].d_lock, NULL) != 0)
+			return (1);
+		if (pthread_cond_init(&dongles[i].d_cond, NULL) != 0)
+		{
+			pthread_mutex_destroy(&dongles[i].d_lock);
+			return (1);
+		}
 		dongles[i].dongle_id = i + 1;
 		dongles[i].is_available = true;
 		dongles[i].last_release = 0;
 		dongles[i].cooldown = sim->args->dongle_cooldown;
-		pthread_mutex_init(&dongles[i].d_lock, NULL);
-		ret = pthread_cond_init(&dongles[i].d_cond, NULL);
-		fail_safe(ret, "Mutex cond creation failed.", sim);
 		dongles[i].request_heap.size = 0;
 		i++;
+		sim->d_init = i;
 	}
 	return (0);
 }
@@ -72,35 +74,66 @@ int	init_coders(t_sim *sim, void *coder_routine)
 	int			i;
 
 	coders = sim->coders;
-	n = sim->args->nb_coders;
 	i = 0;
-	while (i < n)
+	while (i < sim->args->nb_coders)
 	{
 		init_single_coder(sim, i);
-		if (fail_safe(pthread_mutex_init(&coders[i].lock, NULL),
-			"Coder mutex failed.", sim) != 0)
+		if (pthread_mutex_init(&coders[i].lock, NULL) != 0)
+		{
+			fprintf(stderr, "Coder mutex failed");
 			return (1);
-		if (fail_safe(pthread_create(&coders[i].thread, NULL,
-				coder_routine, (void *)&coders[i]),
-			"Thread creation failed.", sim) != 0)
-			return (1);
-		sim->coders_init = i + 1;
+		}
+		if (pthread_create(&coders[i].thread, NULL, coder_routine, (void *)&coders[i]) != 0)
+		{
+			pthread_mutex_destroy(&coders[i].lock);
+			fprintf(stderr, "Thread creation failed");
+			return(1);
+		}
 		i++;
+		sim->c_init = i;
+	}
+	return (0);
+}
+
+static int	init_sim_locks(t_sim *sim)
+{
+	if (pthread_mutex_init(&sim->print_lock, NULL) != 0)
+		return (1);
+	if (pthread_mutex_init(&sim->sim_lock, NULL) != 0)
+	{
+		pthread_mutex_destroy(&sim->print_lock);
+		return (1);
+	}
+	if (pthread_mutex_init(&sim->seq_lock, NULL) != 0)
+	{
+		pthread_mutex_destroy(&sim->print_lock);
+		pthread_mutex_destroy(&sim->sim_lock);
+		return (1);
+	}
+	if (pthread_cond_init(&sim->s_cond, NULL) != 0)
+	{
+		pthread_mutex_destroy(&sim->print_lock);
+		pthread_mutex_destroy(&sim->sim_lock);
+		pthread_mutex_destroy(&sim->seq_lock);
+		return (1);
 	}
 	return (0);
 }
 
 t_sim	*create_simulation(t_args *args)
 {
-	t_sim	*sim;
+	t_sim		*sim;
 
-	sim = malloc(sizeof(*sim));
+	sim = malloc(sizeof(t_sim));
 	if (!sim)
 		return (NULL);
-	memset(sim, 0, sizeof(*sim));
+	memset(sim, 0, sizeof(t_sim));
+	sim->coders_ready = false;
+	sim->start_time = get_time_ms();
+	sim->seq_counter = 0;
 	sim->args = args;
-	sim->coders = malloc(sizeof(*sim->coders) * args->nb_coders);
-	sim->dongles = malloc(sizeof(*sim->dongles) * args->nb_coders);
+	sim->coders = malloc(sizeof(t_coder) * args->nb_coders);
+	sim->dongles = malloc(sizeof(t_dongle) * args->nb_coders);
 	if (!sim->coders || !sim->dongles)
 	{
 		free(sim->coders);
@@ -108,21 +141,11 @@ t_sim	*create_simulation(t_args *args)
 		free(sim);
 		return (NULL);
 	}
-	if (fail_safe(pthread_mutex_init(&sim->print_lock, NULL),
-		"Sim Mutex failed", sim) != 0)
+	sim->stop_sim = false;
+	if (init_sim_locks(sim) != 0)
+	{
+		fprintf(stderr, "Failed to initiate sim primitives");
 		return (NULL);
-	sim->print_lock_init = true;
-	if (fail_safe(pthread_mutex_init(&sim->sim_lock, NULL),
-		"Sim Mutex failed", sim) != 0)
-		return (NULL);
-	sim->sim_lock_init = true;
-	if (fail_safe(pthread_mutex_init(&sim->seq_lock, NULL),
-		"Sim Mutex failed", sim) != 0)
-		return (NULL);
-	sim->seq_lock_init = true;
-	if (fail_safe(pthread_cond_init(&sim->s_cond, NULL),
-		"Sim Cond failed", sim) != 0)
-		return (NULL);
-	sim->s_cond_init = true;
+	}
 	return (sim);
 }
