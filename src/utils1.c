@@ -12,16 +12,6 @@
 
 #include "codex.h"
 
-int	fail_safe(int ret, char *msg)
-{
-	if (ret != 0)
-	{
-		fprintf(stderr, "Encountered Error: %s\n", msg);
-		exit (1);
-	}
-	return (ret);
-}
-
 long	get_time_ms(void)
 {
 	struct timespec	ts;

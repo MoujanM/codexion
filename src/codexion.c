@@ -12,10 +12,19 @@
 
 #include "codex.h"
 
-void	init_simulation(t_sim *sim)
+int	init_simulation(t_sim *sim)
 {
-	init_dongles(sim);
-	if (init_coders(sim, coder_routine) == 0 && !sim->coders_ready)
+	if (init_dongles(sim) != 0)
+	{
+		fprintf(stderr, "Dongle init failed.");
+		return (1);
+	}
+	if (init_coders(sim, coder_routine) != 0)
+	{
+		fprintf(stderr, "Coder init failed.");
+		return (1);
+	}
+	if (!sim->coders_ready)
 	{
 		pthread_mutex_lock(&sim->sim_lock);
 		sim->coders_ready = true;
@@ -23,8 +32,12 @@ void	init_simulation(t_sim *sim)
 		pthread_cond_broadcast(&sim->s_cond);
 		pthread_mutex_unlock(&sim->sim_lock);
 	}
-	fail_safe(pthread_create(&sim->monitor, NULL, monitor_routine, sim),
-		"Monitor thread creation failed");
+	if (pthread_create(&sim->monitor, NULL, monitor_routine, sim) != 0)
+	{
+		fprintf(stderr, "Monitor init failed.");
+		return (1);
+	}
+	return (0);
 }
 
 void	join_coders(t_coder *coders, int n)
@@ -46,8 +59,11 @@ int	codexion(t_args *args)
 	sim = create_simulation(args);
 	if (!sim)
 		return (1);
-	init_simulation(sim);
-	join_coders(sim->coders, args->nb_coders);
+	if (init_simulation(sim) != 0)
+		return (1);
+	pthread_mutex_lock(&sim->sim_lock);
+	join_coders(sim->coders, sim->c_init);
+	pthread_mutex_unlock(&sim->sim_lock);
 	pthread_join(sim->monitor, NULL);
 	if (is_stopped(sim))
 	{

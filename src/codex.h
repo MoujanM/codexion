@@ -117,7 +117,7 @@ int		ft_parser(int ac, char **av, t_args *args);
 void	fill_args_struct(int *arg_arr, char *scheduler, t_args *args);
 
 t_sim	*create_simulation(t_args *args);
-void	init_simulation(t_sim *sim);
+int		init_simulation(t_sim *sim);
 int		init_dongles(t_sim *sim);
 int		init_coders(t_sim *sim, void *coder_routine);
 void	join_coders(t_coder *coders, int n);
@@ -154,7 +154,6 @@ void	*coder_routine(void *args);
 void	print_log(t_coder *coder, long timestamp, t_action act);
 long	get_time_ms(void);
 long	elapsed_time_ms(t_sim *sim);
-int		fail_safe(int ret, char *msg);
 
 // mini-heap
 void	swap(t_req *x, t_req *y);

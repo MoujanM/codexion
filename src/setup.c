@@ -70,7 +70,6 @@ static void	init_single_coder(t_sim *sim, int i)
 int	init_coders(t_sim *sim, void *coder_routine)
 {
 	t_coder		*coders;
-	int			n;
 	int			i;
 
 	coders = sim->coders;
@@ -80,13 +79,13 @@ int	init_coders(t_sim *sim, void *coder_routine)
 		init_single_coder(sim, i);
 		if (pthread_mutex_init(&coders[i].lock, NULL) != 0)
 		{
-			fprintf(stderr, "Coder mutex failed");
+			fprintf(stderr, "Coder mutex creation failed");
 			return (1);
 		}
 		if (pthread_create(&coders[i].thread, NULL, coder_routine, (void *)&coders[i]) != 0)
 		{
 			pthread_mutex_destroy(&coders[i].lock);
-			fprintf(stderr, "Thread creation failed");
+			fprintf(stderr, "Coder thread creation failed");
 			return(1);
 		}
 		i++;
@@ -120,28 +119,39 @@ static int	init_sim_locks(t_sim *sim)
 	return (0);
 }
 
-t_sim	*create_simulation(t_args *args)
+static int		set_sim_opts(t_sim *sim, int nb)
 {
-	t_sim		*sim;
-
-	sim = malloc(sizeof(t_sim));
-	if (!sim)
-		return (NULL);
-	memset(sim, 0, sizeof(t_sim));
 	sim->coders_ready = false;
 	sim->start_time = get_time_ms();
 	sim->seq_counter = 0;
-	sim->args = args;
-	sim->coders = malloc(sizeof(t_coder) * args->nb_coders);
-	sim->dongles = malloc(sizeof(t_dongle) * args->nb_coders);
+	sim->stop_sim = false;
+	sim->coders = malloc(sizeof(t_coder) * nb);
+	sim->dongles = malloc(sizeof(t_dongle) * nb);
 	if (!sim->coders || !sim->dongles)
 	{
 		free(sim->coders);
 		free(sim->dongles);
 		free(sim);
+		return (1);
+	}
+	return (0);
+}
+t_sim	*create_simulation(t_args *args)
+{
+	t_sim		*sim;
+	int			nb;
+
+	sim = malloc(sizeof(t_sim));
+	if (!sim)
+		return (NULL);
+	memset(sim, 0, sizeof(t_sim));
+	sim->args = args;
+	nb = args->nb_coders;
+	if (set_sim_opts(sim, nb) != 0)
+	{
+		fprintf(stderr, "Malloc Failure");
 		return (NULL);
 	}
-	sim->stop_sim = false;
 	if (init_sim_locks(sim) != 0)
 	{
 		fprintf(stderr, "Failed to initiate sim primitives");
