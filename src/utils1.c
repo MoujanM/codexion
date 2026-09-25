@@ -36,18 +36,15 @@ void	print_log(t_coder *coder, long timestamp, t_action act)
 	};
 
 	pthread_mutex_lock(&coder->sim->print_lock);
-	if (!is_stopped(coder->sim))
+	if (act == GRAB && coder->sim->args->nb_coders == 1)
+		printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);
+	else if (act == GRAB)
 	{
-		if (act == GRAB && coder->sim->args->nb_coders == 1)
-			printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);
-		else if (act == GRAB)
-		{
-			printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);
-			printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);
-		}
-		else
-			printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);
+		printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);
+		printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);
 	}
+	else
+		printf("%ld %d %s\n", timestamp, coder->coder_id, act_str[act]);
 	pthread_mutex_unlock(&coder->sim->print_lock);
 }
 

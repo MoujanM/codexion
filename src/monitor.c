@@ -20,7 +20,7 @@ void	stop_sim(t_sim *sim)
 	sim->stop_sim = true;
 	pthread_mutex_unlock(&sim->sim_lock);
 	i = 0;
-	while (i < sim->args->nb_coders)
+	while (i < sim->d_init)
 	{
 		pthread_mutex_lock(&sim->dongles[i].d_lock);
 		pthread_cond_broadcast(&sim->dongles[i].d_cond);

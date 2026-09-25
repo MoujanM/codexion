@@ -61,9 +61,7 @@ int	codexion(t_args *args)
 		return (1);
 	if (init_simulation(sim) != 0)
 		return (1);
-	pthread_mutex_lock(&sim->sim_lock);
-	join_coders(sim->coders, sim->c_init);
-	pthread_mutex_unlock(&sim->sim_lock);
+	join_coders(sim->coders, args->nb_coders);
 	pthread_join(sim->monitor, NULL);
 	if (is_stopped(sim))
 	{
