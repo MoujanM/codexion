@@ -28,8 +28,12 @@ void	wait_on_dongle(t_dongle *dongle, t_coder *coder)
 	struct timespec		t_deadline;
 
 	pthread_mutex_lock(&dongle->d_lock);
-	if (!is_ready(dongle, coder))    // re-check once we hold the lock; avoid a stale decision
+	while (!is_stopped(coder->sim))
 	{
+		if (dongle->is_available && (dongle->last_release == 0
+				|| get_time_ms() >= dongle->last_release + dongle->cooldown)
+			&& dongle->request_heap.request[0].coder_id == coder->coder_id)
+			break ;
 		t_cooldown = dongle->last_release + dongle->cooldown;
 		if (dongle->last_release == 0 || get_time_ms() >= t_cooldown)
 			pthread_cond_wait(&dongle->d_cond, &dongle->d_lock);
@@ -37,37 +41,12 @@ void	wait_on_dongle(t_dongle *dongle, t_coder *coder)
 		{
 			t_deadline.tv_sec = t_cooldown / 1000;
 			t_deadline.tv_nsec = (t_cooldown % 1000) * 1000000;
-			pthread_cond_timedwait(&dongle->d_cond, &dongle->d_lock, &t_deadline);
+			pthread_cond_timedwait(&dongle->d_cond, &dongle->d_lock,
+				&t_deadline);
 		}
 	}
 	pthread_mutex_unlock(&dongle->d_lock);
 }
-
-// void	wait_on_dongle(t_dongle *dongle, t_coder *coder)
-// {
-// 	long				t_cooldown;
-// 	struct timespec		t_deadline;
-
-// 	pthread_mutex_lock(&dongle->d_lock);
-// 	while (!is_stopped(coder->sim))
-// 	{
-// 		if (dongle->is_available && (dongle->last_release == 0
-// 				|| get_time_ms() >= dongle->last_release + dongle->cooldown)
-// 			&& dongle->request_heap.request[0].coder_id == coder->coder_id)
-// 			break ;
-// 		t_cooldown = dongle->last_release + dongle->cooldown;
-// 		if (dongle->last_release == 0 || get_time_ms() >= t_cooldown)
-// 			pthread_cond_wait(&dongle->d_cond, &dongle->d_lock);
-// 		else
-// 		{
-// 			t_deadline.tv_sec = t_cooldown / 1000;
-// 			t_deadline.tv_nsec = (t_cooldown % 1000) * 1000000;
-// 			pthread_cond_timedwait(&dongle->d_cond, &dongle->d_lock,
-// 				&t_deadline);
-// 		}
-// 	}
-// 	pthread_mutex_unlock(&dongle->d_lock);
-// }
 
 int	take_if_available(t_coder *coder, t_dongle *first, t_dongle *second)
 {

@@ -34,6 +34,20 @@ valgrind --tool=helgrind ./codexion 5 800 200 200 100 3 100 edf / fifo
 valgrind --tool=drd ./codexion 5 800 200 200 100 3 100 edf / fifo
 
 ```
+**Known helgrind false positive**
+In certain cases helgrind throws an error; `pthread_cond_{signal,broadcast}: dubious: associated lock is not held by any thread`. This is a known limitation of using helgrind on condition variables and fixable with the use of semaphores, forbidden in this project.
+To show this is indeed a false positive and not a design problem, run the following commands after executing `make`, demonstrating a heavy-contention scenario:
+
+```bash
+# run valgrind to catch error:
+for i in 1 2 3 4 5; do valgrind --tool=helgrind ./codexion 5 3000 200 200 200 10 800 edf; echo ---; done
+# observe that the error occurs after burnout
+
+# run command normally - there should be no burnout at all:
+for i in 1 2 3 4 5; do ./codexion 5 3000 200 200 200 10 800 edf; echo ---; done
+```
+
+
 
 ### Blocking cases handled
 
@@ -108,12 +122,13 @@ On first condition it prints the burnout message, using the timestamp captured a
 - [POSIX Threads (Pthreads): Creation and Termination](https://circuitlabs.net/posix-threads-pthreads-creation-and-termination/)
 - [Pthreads: Mutexes for Protecting Critical Sections](https://circuitlabs.net/pthreads-mutexes-for-protecting-critical-sections/)
 - [Pthreads: Condition Variables for Signaling Between Threads](https://circuitlabs.net/pthreads-condition-variables-for-signaling-between-threads/)
+- [Helgrind: a thread error detector](https://courses.cs.vt.edu/cs3214/fall2011/projects/valgrind/valgrind-3.7.0/docs/html/hg-manual.html)
 - [Peer solution](https://github.com/browser22nd/codexion)
 
 ### AI usage
 
 AI (Claude) was used as a tutoring aid throughout development — for conceptual explanations, especially putting information from various resources into workable roadmap, targeted code review to catch bugs (pointer misuse, race conditions, lock-ordering issues), and guided debugging sessions (GDB usage tutorial, tracing timing bugs).
 
-Gemini was used to understand and ultimately rectify a particular Helgrind "dubious" error.
+Gemini was used to understand and ultimately rectify a particular Helgrind "dubious" error on earlier versions.
 
 All design decisions, struct layouts, and final code were written and understood by the author; AI was not used to generate solutions.

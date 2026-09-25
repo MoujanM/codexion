@@ -37,7 +37,8 @@ int	clean_sim(t_sim *sim)
 	if (!sim)
 		return (1);
 	if (pthread_mutex_destroy(&sim->sim_lock)
-		|| pthread_mutex_destroy(&sim->print_lock))
+		|| pthread_mutex_destroy(&sim->print_lock)
+		|| pthread_mutex_destroy(&sim->seq_lock))
 		return (1);
 	free(sim->coders);
 	free(sim->dongles);

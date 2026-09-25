@@ -61,7 +61,7 @@ int	codexion(t_args *args)
 		return (1);
 	if (init_simulation(sim) != 0)
 		return (1);
-	join_coders(sim->coders, args->nb_coders);
+	join_coders(sim->coders, sim->c_init);
 	pthread_join(sim->monitor, NULL);
 	if (is_stopped(sim))
 	{
