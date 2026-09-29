@@ -6,11 +6,39 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:58:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/27 16:37:08 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/09/29 19:53:28 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codex.h"
+
+void	init_single_coder(t_sim *sim, int i)
+{
+	t_coder	*coder;
+	int		n;
+
+	coder = &sim->coders[i];
+	n = sim->args->nb_coders;
+	coder->coder_id = i + 1;
+	coder->last_compile = 0;
+	coder->nb_compiles = 0;
+	if (n == 1)
+	{
+		coder->dongle_1 = &sim->dongles[i];
+		coder->dongle_2 = NULL;
+	}
+	else if (i == n - 1)
+	{
+		coder->dongle_1 = &sim->dongles[(i + 1) % n];
+		coder->dongle_2 = &sim->dongles[i];
+	}
+	else
+	{
+		coder->dongle_1 = &sim->dongles[i];
+		coder->dongle_2 = &sim->dongles[(i + 1) % n];
+	}
+	coder->sim = sim;
+}
 
 int	compile(t_coder *coder)
 {

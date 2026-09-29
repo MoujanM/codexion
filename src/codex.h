@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:38:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/09/24 16:23:48 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/09/29 19:53:57 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -119,6 +119,7 @@ void	fill_args_struct(int *arg_arr, char *scheduler, t_args *args);
 t_sim	*create_simulation(t_args *args);
 int		init_simulation(t_sim *sim);
 int		init_dongles(t_sim *sim);
+void	init_single_coder(t_sim *sim, int i);
 int		init_coders(t_sim *sim, void *coder_routine);
 void	join_coders(t_coder *coders, int n);
 int		codexion(t_args *args);

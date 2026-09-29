@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:32:39 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/09/24 16:46:45 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/09/29 19:53:10 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,34 +39,6 @@ int	init_dongles(t_sim *sim)
 	return (0);
 }
 
-static void	init_single_coder(t_sim *sim, int i)
-{
-	t_coder	*coder;
-	int		n;
-
-	coder = &sim->coders[i];
-	n = sim->args->nb_coders;
-	coder->coder_id = i + 1;
-	coder->last_compile = 0;
-	coder->nb_compiles = 0;
-	if (n == 1)
-	{
-		coder->dongle_1 = &sim->dongles[i];
-		coder->dongle_2 = NULL;
-	}
-	else if (i == n - 1)
-	{
-		coder->dongle_1 = &sim->dongles[(i + 1) % n];
-		coder->dongle_2 = &sim->dongles[i];
-	}
-	else
-	{
-		coder->dongle_1 = &sim->dongles[i];
-		coder->dongle_2 = &sim->dongles[(i + 1) % n];
-	}
-	coder->sim = sim;
-}
-
 int	init_coders(t_sim *sim, void *coder_routine)
 {
 	t_coder		*coders;
@@ -82,11 +54,12 @@ int	init_coders(t_sim *sim, void *coder_routine)
 			fprintf(stderr, "Coder mutex creation failed");
 			return (1);
 		}
-		if (pthread_create(&coders[i].thread, NULL, coder_routine, (void *)&coders[i]) != 0)
+		if (pthread_create(&coders[i].thread, NULL,
+				coder_routine, (void *)&coders[i]) != 0)
 		{
 			pthread_mutex_destroy(&coders[i].lock);
 			fprintf(stderr, "Coder thread creation failed");
-			return(1);
+			return (1);
 		}
 		i++;
 		sim->c_init = i;
@@ -119,7 +92,7 @@ static int	init_sim_locks(t_sim *sim)
 	return (0);
 }
 
-static int		set_sim_opts(t_sim *sim, int nb)
+static int	set_sim_opts(t_sim *sim, int nb)
 {
 	sim->coders_ready = false;
 	sim->start_time = get_time_ms();
@@ -136,6 +109,7 @@ static int		set_sim_opts(t_sim *sim, int nb)
 	}
 	return (0);
 }
+
 t_sim	*create_simulation(t_args *args)
 {
 	t_sim		*sim;

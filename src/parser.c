@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:32:27 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/08/07 13:02:13 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/09/29 20:09:02 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,10 @@ int	ft_parser(int ac, char **av, t_args *args)
 	int		n;
 
 	if (ac != 9)
+	{
+		fprintf(stderr, "Incorrect number of arguments found\n");
 		return (1);
+	}
 	i = 1;
 	while (i < ac - 1)
 	{
@@ -42,7 +45,10 @@ int	ft_parser(int ac, char **av, t_args *args)
 		i++;
 	}
 	if (strcmp(av[i], "fifo") && strcmp(av[i], "edf"))
+	{
+		fprintf(stderr, "Unknown scheduler. Must be 'fifo' or 'edf'\n");
 		return (1);
+	}
 	fill_args_struct(arg_arr, av[i], args);
 	return (0);
 }

@@ -6,7 +6,7 @@
 /*   By: mmirdama <mmirdama@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/31 13:31:41 by mmirdama          #+#    #+#             */
-/*   Updated: 2026/09/24 16:52:09 by mmirdama         ###   ########.fr       */
+/*   Updated: 2026/09/29 19:51:09 by mmirdama         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,6 @@ int	clean_sim(t_sim *sim)
 
 int	clean_all(t_sim *sim)
 {
-	// needs to use sim counters
 	int	i;
 
 	i = 0;

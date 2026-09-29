@@ -35,7 +35,8 @@ valgrind --tool=drd ./codexion 5 800 200 200 100 3 100 edf / fifo
 
 ```
 **Known helgrind false positive**
-In certain cases helgrind throws an error; `pthread_cond_{signal,broadcast}: dubious: associated lock is not held by any thread`. This is a known limitation of using helgrind on condition variables and fixable with the use of semaphores, forbidden in this project.
+
+In certain cases and on certain systems helgrind may throw an error; `pthread_cond_{signal,broadcast}: dubious: associated lock is not held by any thread`. This is a known limitation of using helgrind on condition variables and fixable with the use of semaphores, forbidden in this project.
 To show this is indeed a false positive and not a design problem, run the following commands after executing `make`, demonstrating a heavy-contention scenario:
 
 ```bash
